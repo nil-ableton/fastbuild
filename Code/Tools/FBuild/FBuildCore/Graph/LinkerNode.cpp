@@ -349,6 +349,17 @@ void LinkerNode::GetInputFiles( Args & fullArgs, const AString & pre, const AStr
 //------------------------------------------------------------------------------
 void LinkerNode::GetInputFiles( Node * n, Args & fullArgs, const AString & pre, const AString & post ) const
 {
+        auto AppendArgument = [](Args& dest, const AString& pre, const AString& arg, const AString& post) {
+	  dest += pre;
+	  if (arg.Find(' ')) {
+		  dest += '"';
+		  dest += arg;
+		  dest += '"';
+	  } else {
+	    dest += arg;
+	  }
+	  dest += post;
+	};
 	if ( n->GetType() == Node::LIBRARY_NODE )
 	{
 		bool linkObjectsInsteadOfLibs = GetFlag( LINK_OBJECTS );
@@ -361,9 +372,7 @@ void LinkerNode::GetInputFiles( Node * n, Args & fullArgs, const AString & pre, 
 		else
 		{
 			// not building a DLL, so link the lib directly
-			fullArgs += pre;
-			fullArgs += n->GetName();
-			fullArgs += post;
+			AppendArgument(fullArgs, pre, n->GetName(), post);
 		}
 	}
 	else if ( n->GetType() == Node::OBJECT_LIST_NODE )
@@ -377,9 +386,7 @@ void LinkerNode::GetInputFiles( Node * n, Args & fullArgs, const AString & pre, 
 		DLLNode * dllNode = n->CastTo< DLLNode >();
 		AStackString<> importLibName;
 		dllNode->GetImportLibName( importLibName );
-		fullArgs += pre;
-		fullArgs += importLibName;
-		fullArgs += post;
+		AppendArgument(fullArgs, pre, importLibName, post);
 	}
 	else if ( n->GetType() == Node::COPY_FILE_NODE )
 	{
@@ -390,9 +397,7 @@ void LinkerNode::GetInputFiles( Node * n, Args & fullArgs, const AString & pre, 
 	else
 	{
 		// link anything else directly
-		fullArgs += pre;
-		fullArgs += n->GetName();
-		fullArgs += post;
+		AppendArgument(fullArgs, pre, n->GetName(), post);
 	}
 
 	fullArgs.AddDelimiter();
